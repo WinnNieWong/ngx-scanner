@@ -9,7 +9,7 @@ import {
   Output,
   ViewChild
 } from '@angular/core';
-import { BrowserCodeReader } from '@vnyw/browser';
+import { BrowserCodeReader } from '@vnyw/browzer';
 import {
   BarcodeFormat,
   DecodeHintType,
@@ -637,11 +637,14 @@ export class ZXingScannerComponent implements OnInit, OnDestroy {
    * available device.
    */
   private async autostartScanner(devices: MediaDeviceInfo[]): Promise<void> {
+    // update android devices to prior select camera 2 0, facing back
+    const androidMatcher = ({ label }) => /camera2 0, facing back/gi.test(label);
 
     const matcher = ({ label }) => /back|trás|rear|traseira|environment|ambiente/gi.test(label);
 
-    // select the rear camera by default, otherwise take the last camera.
-    const device = devices.find(matcher) || devices.pop();
+    // select the androidMatcher device else the rear camera by default, otherwise take the last camera.
+    const androidMatcherDevice = devices.find(androidMatcher);
+    const device = androidMatcherDevice || devices.find(matcher) || devices.pop();
 
     if (!device) {
       throw new Error('Impossible to autostart, no input devices available.');
