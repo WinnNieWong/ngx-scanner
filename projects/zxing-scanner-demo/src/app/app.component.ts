@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, ChangeDetectionStrategy } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
 import { BarcodeFormat } from '@zxing/library';
 import { BehaviorSubject } from 'rxjs';
@@ -6,9 +6,11 @@ import { FormatsDialogComponent } from './formats-dialog/formats-dialog.componen
 import { AppInfoDialogComponent } from './app-info-dialog/app-info-dialog.component';
 
 @Component({
-  selector: 'app-root',
-  templateUrl: 'app.component.html',
-  styleUrls: ['./app.component.scss']
+    selector: 'app-root',
+    templateUrl: 'app.component.html',
+    styleUrls: ['./app.component.scss'],
+    changeDetection: ChangeDetectionStrategy.Eager,
+    standalone: false
 })
 export class AppComponent {
 

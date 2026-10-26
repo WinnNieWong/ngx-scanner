@@ -22,10 +22,11 @@ import { ResultAndError } from './ResultAndError';
 
 
 @Component({
-  selector: 'zxing-scanner',
-  templateUrl: './zxing-scanner.component.html',
-  styleUrls: ['./zxing-scanner.component.scss'],
-  changeDetection: ChangeDetectionStrategy.OnPush
+    selector: 'zxing-scanner',
+    templateUrl: './zxing-scanner.component.html',
+    styleUrls: ['./zxing-scanner.component.scss'],
+    changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class ZXingScannerComponent implements OnInit, OnDestroy {
 
@@ -218,12 +219,6 @@ export class ZXingScannerComponent implements OnInit, OnDestroy {
 
     if (!this.hasPermission) {
       console.warn('Permissions not set yet, waiting for them to be set to apply device change.');
-      // this.permissionResponse
-      //   .pipe(
-      //     take(1),
-      //     tap(() => console.log(`Permissions set, applying device change${device ? ` (${device.deviceId})` : ''}.`))
-      //   )
-      //   .subscribe(() => this.device = device);
       return;
     }
 
@@ -331,9 +326,9 @@ export class ZXingScannerComponent implements OnInit, OnDestroy {
   set torch(onOff: boolean) {
     try {
       const controls = this.getCodeReader().getScannerControls();
-      controls.switchTorch(onOff);
+      controls.switchTorch(onOff).catch(() => {});
     } catch (error) {
-      // ignore error
+      // getScannerControls() throws synchronously if no scan is running
     }
   }
 
@@ -445,7 +440,7 @@ export class ZXingScannerComponent implements OnInit, OnDestroy {
       // Will try to ask for permission
       stream = await this.getAnyVideoDevice();
       permission = !!stream;
-    } catch (err) {
+    } catch (err: any) {
       return this.handlePermissionException(err);
     } finally {
       this.terminateStream(stream);
@@ -475,12 +470,9 @@ export class ZXingScannerComponent implements OnInit, OnDestroy {
    * Terminates a stream and it's tracks.
    */
   private terminateStream(stream: MediaStream) {
-
     if (stream) {
       stream.getTracks().forEach(t => t.stop());
     }
-
-    stream = undefined;
   }
 
   private async init() {
@@ -577,7 +569,6 @@ export class ZXingScannerComponent implements OnInit, OnDestroy {
       this._scanSubscription?.unsubscribe();
       this._scanSubscription = undefined;
     }
-    this.torchCompatible.next(false);
   }
 
   /**
@@ -640,7 +631,7 @@ export class ZXingScannerComponent implements OnInit, OnDestroy {
     // update android devices to prior select camera 2 0, facing back
     const androidMatcher = ({ label }) => /camera2 0, facing back/gi.test(label);
 
-    const matcher = ({ label }) => /back|trás|rear|traseira|environment|ambiente/gi.test(label);
+    const matcher = ({ label }: MediaDeviceInfo) => /back|trás|rear|traseira|environment|ambiente/gi.test(label);
 
     // select the androidMatcher device else the rear camera by default, otherwise take the last camera.
     const androidMatcherDevice = devices.find(androidMatcher);
@@ -743,7 +734,15 @@ export class ZXingScannerComponent implements OnInit, OnDestroy {
         // tells the listener about the error
         this.camerasNotFound.next(err);
         break;
-
+      case 'AbortError':
+        console.warn('@zxing/ngx-scanner', 'It seems that the required permissions have been granted, but something else failed', err);
+        // permissions claimed
+        permission = true;
+        // can't check devices
+        this.hasDevices.next(null);
+        // tells the listener about the error
+        this.camerasNotFound.next(err);
+        break;
       default:
         console.warn('@zxing/ngx-scanner', 'I was not able to define if I have permissions for camera or not.', err);
         // unknown
@@ -755,9 +754,6 @@ export class ZXingScannerComponent implements OnInit, OnDestroy {
 
     this.setPermission(permission);
 
-    // tells the listener about the error
-    this.permissionResponse.error(err);
-
     return permission;
   }
 
@@ -766,7 +762,7 @@ export class ZXingScannerComponent implements OnInit, OnDestroy {
    */
   private getBarcodeFormatOrFail(format: string | BarcodeFormat): BarcodeFormat {
     return typeof format === 'string'
-      ? BarcodeFormat[format.trim().toUpperCase()]
+      ? BarcodeFormat[format.trim().toUpperCase() as keyof typeof BarcodeFormat]
       : format;
   }
 
@@ -803,12 +799,10 @@ export class ZXingScannerComponent implements OnInit, OnDestroy {
       throw new Error('Undefined decoding stream, aborting.');
     }
 
-    const next = (x: ResultAndError) => this._onDecodeResult(x.result, x.error);
-    const error = (err: any) => this._onDecodeError(err);
-    const complete = () => {
-    };
-
-    this._scanSubscription = scanStream.subscribe(next, error, complete);
+    this._scanSubscription = scanStream.subscribe({
+      next: (x: ResultAndError) => this._onDecodeResult(x.result, x.error),
+      error: (err: any) => this._onDecodeError(err),
+    });
 
     if (this._scanSubscription.closed) {
       return;

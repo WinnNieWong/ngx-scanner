@@ -1,6 +1,6 @@
 import { ChecksumException, FormatException, NotFoundException } from '@zxing/library';
-import { BrowserMultiFormatReader, IScannerControls } from '@vnyw/browzer';
-import { BehaviorSubject, Observable } from 'rxjs';
+import { BrowserMultiFormatReader, IScannerControls } from '@vnyw/browser';
+import { Observable, Subject } from 'rxjs';
 import { ResultAndError } from './ResultAndError';
 
 /**
@@ -35,8 +35,8 @@ export class BrowserMultiFormatContinuousReader extends BrowserMultiFormatReader
     previewEl?: HTMLVideoElement
   ): Promise<Observable<ResultAndError>> {
 
-    const scan$ = new BehaviorSubject<ResultAndError>({});
-    let ctrls;
+    const scan$ = new Subject<ResultAndError>();
+    let ctrls: IScannerControls;
 
     try {
       ctrls = await this.decodeFromVideoDevice(deviceId, previewEl, (result, error) => {
@@ -63,7 +63,7 @@ export class BrowserMultiFormatContinuousReader extends BrowserMultiFormatReader
 
         // probably fatal error
         scan$.error(error);
-        this.scannerControls.stop();
+        ctrls?.stop();
         this.scannerControls = undefined;
         return;
       });

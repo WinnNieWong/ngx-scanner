@@ -1,16 +1,21 @@
 {
   "name": "@vnyw/ngx-scanner",
-  "version": "18.0.0",
-  "description": "Vnyw fork of High-performance Angular barcode scanner component based on ZXing.",
+  "version": "22.0.1",
+  "description": "High-performance Angular barcode scanner component based on ZXing.",
   "homepage": "https://github.com/WinnNieWong/ngx-scanner#readme",
   "private": false,
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/zxing-js/ngx-scanner.git"
+  },
   "peerDependencies": {
-    "@angular/common": "^11.2.11 || ^12.0.4 || ^13.0.0 || ^14.0.0 || ^15.0.0 || ^16.0.0 || ^17.0.0 || ^18.0.0",
-    "@angular/core": "^11.2.11 || ^12.0.4 || ^13.0.0 || ^14.0.0 || ^15.0.0 || ^16.0.0 || ^17.0.0 || ^18.0.0",
-    "@angular/forms": "^11.2.11 || ^12.0.4 || ^13.0.0 || ^14.0.0 || ^15.0.0 || ^16.0.0 || ^17.0.0 || ^18.0.0",
-    "@vnyw/browzer": "^0.1.4",
-    "@zxing/library": "^0.21.0",
-    "rxjs": "^6.6.3 || ^7.0.0"
+    "@angular/common": "^22.0.0",
+    "@angular/core": "^22.0.0",
+    "@angular/forms": "^22.0.0",
+    "@vnyw/browser": "^0.2.1",
+    "@zxing/library": "^0.23.0",
+    "rxjs": "^6.5.3 || ^7.4.0",
+    "typescript": "^6.0.0"
   }
 }
